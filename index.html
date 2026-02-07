@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income Monitor Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; padding-bottom: 100px; }
+        .app-gradient { background: linear-gradient(135deg, #059669 0%, #10b981 100%); }
+        .glass { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white p-8">
+        <div class="w-full max-w-sm text-center">
+            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            </div>
+            <h1 class="text-3xl font-black text-slate-800 mb-2">Secure Access</h1>
+            <p class="text-slate-500 mb-8">Enter PIN to monitor assets</p>
+            <input type="password" id="pin-input" maxlength="4" placeholder="••••" class="w-full text-center text-4xl tracking-[1rem] p-4 border-2 border-slate-100 rounded-2xl mb-6 focus:border-emerald-500 outline-none">
+            <button onclick="attemptLogin()" class="w-full bg-emerald-600 text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition">Unlock System</button>
+        </div>
+    </div>
+
+    <div id="main-app" class="hidden">
+        <div class="app-gradient p-8 rounded-b-[3rem] shadow-xl mb-6">
+            <div class="flex justify-between items-center text-emerald-50 mb-6">
+                <span class="text-xs font-bold uppercase tracking-widest">Total Net Worth</span>
+                <button onclick="logout()" class="glass px-3 py-1 rounded-full text-xs">Lock</button>
+            </div>
+            <h2 class="text-5xl font-black text-white mb-8">₱ <span id="total-display">0</span></h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass p-4 rounded-2xl text-white">
+                    <label class="text-[10px] uppercase opacity-80 block mb-1">Cash</label>
+                    <input type="number" id="cash-hand" oninput="saveAndRefresh()" class="bg-transparent text-xl font-bold w-full outline-none">
+                </div>
+                <div class="glass p-4 rounded-2xl text-white">
+                    <label class="text-[10px] uppercase opacity-80 block mb-1">G-Cash</label>
+                    <input type="number" id="cash-gcash" oninput="saveAndRefresh()" class="bg-transparent text-xl font-bold w-full outline-none">
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6">
+            <div class="bg-white p-6 rounded-[2rem] card-shadow mb-8 text-center">
+                <h3 class="text-slate-400 text-xs font-bold uppercase mb-2">Overall Performance</h3>
+                <canvas id="profitChart" height="150"></canvas>
+            </div>
+
+            <h3 class="text-xl font-black text-slate-800 mb-4">Business Status</h3>
+            <div id="business-list" class="space-y-4"></div>
+        </div>
+
+        <button onclick="createNewBusiness()" class="fixed bottom-8 right-8 bg-emerald-600 text-white w-16 h-16 rounded-3xl shadow-2xl flex items-center justify-center active:scale-90 transition">
+            <span class="text-3xl">+</span>
+        </button>
+    </div>
+
+    <script>
+        let storage = JSON.parse(localStorage.getItem('income_pro_db_v2')) || {
+            cashHand: 8000,
+            cashGcash: 9000,
+            businesses: [
+                { id: 1, name: 'Wifi Business', capital: 18000, income: 1200, expenses: 400 }
+            ]
+        };
+
+        function saveAndRefresh() {
+            storage.cashHand = document.getElementById('cash-hand').value || 0;
+            storage.cashGcash = document.getElementById('cash-gcash').value || 0;
+            localStorage.setItem('income_pro_db_v2', JSON.stringify(storage));
+            renderData();
+        }
+
+        function getStatus(income, expenses) {
+            let net = income - expenses;
+            if (net > 500) return { label: 'PROFITABLE', color: 'bg-emerald-100 text-emerald-600' };
+            if (net > 0 && net <= 500) return { label: 'BREAK EVEN', color: 'bg-amber-100 text-amber-600' };
+            return { label: 'LOSS', color: 'bg-red-100 text-red-600' };
+        }
+
+        function renderData() {
+            const total = parseFloat(storage.cashHand) + parseFloat(storage.cashGcash);
+            document.getElementById('total-display').innerText = total.toLocaleString();
+            
+            const list = document.getElementById('business-list');
+            list.innerHTML = '';
+
+            storage.businesses.forEach(biz => {
+                const status = getStatus(biz.income, biz.expenses || 0);
+                list.innerHTML += `
+                <div class="bg-white p-5 rounded-3xl card-shadow border-l-8 ${status.label === 'LOSS' ? 'border-red-500' : 'border-emerald-500'}">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h4 class="font-black text-slate-800">${biz.name}</h4>
+                            <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${status.color}">${status.label}</span>
+                        </div>
+                        <button onclick="removeBusiness(${biz.id})" class="text-slate-300 text-xl">×</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+                        <div class="bg-slate-50 p-2 rounded-xl">
+                            <p class="text-[8px] text-slate-400">CAPITAL</p>
+                            <p class="text-xs font-bold text-slate-700">₱${biz.capital}</p>
+                        </div>
+                        <div class="bg-emerald-50 p-2 rounded-xl">
+                            <p class="text-[8px] text-emerald-400">INCOME</p>
+                            <p class="text-xs font-bold text-emerald-600">₱${biz.income}</p>
+                        </div>
+                        <div class="bg-red-50 p-2 rounded-xl">
+                            <p class="text-[8px] text-red-400">COST</p>
+                            <p class="text-xs font-bold text-red-600">₱${biz.expenses || 0}</p>
+                        </div>
+                    </div>
+                </div>`;
+            });
+        }
+
+        function attemptLogin() {
+            if(document.getElementById('pin-input').value === "1234") {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                initChart();
+                renderData();
+            } else { alert("Wrong PIN!"); }
+        }
+
+        function logout() { location.reload(); }
+
+        function createNewBusiness() {
+            const name = prompt("Business Name:");
+            if(!name) return;
+            const cap = prompt("Capital (₱):") || 0;
+            const inc = prompt("Monthly Income (₱):") || 0;
+            const exp = prompt("Monthly Expenses (₱):") || 0;
+            
+            storage.businesses.push({ id: Date.now(), name, capital: cap, income: inc, expenses: exp });
+            saveAndRefresh();
+        }
+
+        function removeBusiness(id) {
+            if(confirm("Delete this business?")) {
+                storage.businesses = storage.businesses.filter(b => b.id !== id);
+                saveAndRefresh();
+            }
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('profitChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['W1', 'W2', 'W3', 'W4'],
+                    datasets: [{
+                        data: [400, 1100, 800, 2200],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 2
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: { y: { display: false }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        document.getElementById('cash-hand').value = storage.cashHand;
+        document.getElementById('cash-gcash').value = storage.cashGcash;
+    </script>
+</body>
+</html>
