@@ -3,176 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Murad Business Manager Pro</title>
+    <title>Murad Tracker Fixed</title>
     <style>
-        :root { --bg: #0d1117; --card: #161b22; --border: #30363d; --text: #c9d1d9; --blue: #58a6ff; --green: #238636; --red: #da3633; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 50px; }
-        .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-        .wallet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        input, select, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: 1px solid var(--border); background: #0d1117; color: #fff; box-sizing: border-box; font-size: 14px; }
-        button { font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
-        button:active { opacity: 0.7; }
-        .btn-add { background: var(--blue); color: #fff; }
-        .btn-del { background: var(--red); color: #fff; padding: 5px 10px; width: auto; font-size: 0.7em; border-radius: 5px; }
-        .status-tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.75em; font-weight: bold; margin-top: 5px; }
-        .profit { color: var(--green); } .loss { color: var(--red); }
-        .biz-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-        .log-entry { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #21262d; font-size: 0.85em; }
-        .history-label { color: #8b949e; font-size: 0.8em; text-transform: uppercase; margin-top: 20px; display: block; }
+        :root { --bg: #0b0b0b; --card: #1a1a1a; --green: #48bb78; --red: #f56565; --blue: #4299e1; --gray: #a0aec0; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #2d3748; }
+        .bal-val { font-size: 2.2em; font-weight: bold; color: var(--blue); text-align: center; }
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .sum-card { padding: 12px; border-radius: 12px; text-align: center; font-size: 0.9em; border: 1px solid #2d3748; }
+        input, select, button { width: 100%; padding: 15px; margin: 8px 0; border-radius: 10px; border: 1px solid #2d3748; background: #2d3748; color: #fff; box-sizing: border-box; font-size: 16px; }
+        button { font-weight: bold; cursor: pointer; border: none; }
+        .btn-inc { background: var(--green); }
+        .btn-exp { background: var(--red); }
+        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #2d3748; background: #1a1a1a; margin-bottom: 8px; border-radius: 10px; }
+        .log-date { font-size: 0.7em; color: #718096; display: block; }
     </style>
 </head>
 <body>
-
-    <h2 style="text-align:center; color: var(--blue); margin-bottom: 5px;">MURAD TRACKER PRO</h2>
-    <div style="text-align:center; font-size: 0.8em; color: gray; margin-bottom: 20px;" id="live-clock"></div>
-
+    <h2 style="text-align:center; color:var(--blue)">MURAD TRACKER</h2>
+    
     <div class="card">
-        <h4 style="margin:0 0 10px 0">My Wallets (Editable)</h4>
-        <div class="wallet-grid">
-            <div><small>Cash in Hand</small><input type="number" id="w-cash" oninput="updateWallets()" placeholder="8000"></div>
-            <div><small>G-Cash Wallet</small><input type="number" id="w-gcash" oninput="updateWallets()" placeholder="9000"></div>
-        </div>
-        <div style="text-align:center; margin-top:10px; padding-top:10px; border-top: 1px solid var(--border);">
-            <small>Current Total Amount:</small>
-            <h2 id="total-wallets" style="margin:5px 0; color:var(--blue)">₱ 0.00</h2>
-        </div>
+        <div style="font-size: 0.8em; color: var(--gray); text-align: center;">KABUUANG PERA</div>
+        <div id="total" class="bal-val">₱ 0.00</div>
+    </div>
+
+    <div class="summary-grid">
+        <div class="sum-card" style="color:var(--green)">Kita Ngayon<br><b id="today-inc">₱ 0</b></div>
+        <div class="sum-card" style="color:var(--red)">Gastos Ngayon<br><b id="today-exp">₱ 0</b></div>
     </div>
 
     <div class="card">
-        <h4 style="margin:0 0 10px 0">Add Business</h4>
-        <input type="text" id="biz-name" placeholder="Business Name (e.g. Wifi Business)">
-        <input type="number" id="biz-cap" placeholder="Capital (e.g. 18000)">
-        <button class="btn-add" onclick="addBusiness()">+ CREATE BUSINESS</button>
+        <input type="text" id="desc" placeholder="Anong klaseng pera ito?">
+        <input type="number" id="amt" placeholder="Magkano?" inputmode="decimal">
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <select id="wallet">
+                <option value="cash">💵 Cash</option>
+                <option value="gcash">📱 GCash</option>
+            </select>
+            <select id="category">
+                <option value="💰 Income">💰 Income</option>
+                <option value="🍔 Pagkain">🍔 Pagkain</option>
+                <option value="🚗 Pamasahe">🚗 Pamasahe</option>
+                <option value="💡 Bills">💡 Bills</option>
+                <option value="✨ Iba pa">✨ Iba pa</option>
+            </select>
+        </div>
+
+        <div style="display:flex; gap:10px">
+            <button class="btn-inc" onclick="handleTransaction('income')">INCOME</button>
+            <button class="btn-exp" onclick="handleTransaction('expense')">GASTOS</button>
+        </div>
     </div>
 
-    <span class="history-label">Business Portfolios</span>
-    <div id="business-list"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; color:var(--gray)">
+        <h4>HISTORY LOGS</h4>
+        <button onclick="clearData()" style="background:none; color:var(--red); width:auto; font-size:0.8em;">Clear All</button>
+    </div>
+    <div id="logs"></div>
 
     <script>
-        let data = JSON.parse(localStorage.getItem('murad_v4')) || { 
-            cash: 0, 
-            gcash: 0, 
-            businesses: [] 
-        };
+        // Load Database
+        let db = JSON.parse(localStorage.getItem('murad_data')) || { cash: 0, gcash: 0, logs: [] };
 
-        function updateWallets() {
-            data.cash = parseFloat(document.getElementById('w-cash').value) || 0;
-            data.gcash = parseFloat(document.getElementById('w-gcash').value) || 0;
-            save();
-        }
-
-        function addBusiness() {
-            const name = document.getElementById('biz-name').value;
-            const cap = parseFloat(document.getElementById('biz-cap').value) || 0;
-            if(!name) return alert("Enter business name!");
+        function updateDisplay() {
+            // Update Balance
+            const total = db.cash + db.gcash;
+            document.getElementById('total').innerText = "₱ " + total.toLocaleString(undefined, {minimumFractionDigits: 2});
             
-            data.businesses.push({ 
-                name, 
-                cap, 
-                monthlyInc: 0, 
-                logs: [] 
+            // Update Today's Summary
+            const today = new Date().toLocaleDateString();
+            let inc = 0, exp = 0;
+            db.logs.forEach(l => {
+                if(l.date === today) {
+                    if(l.type === 'income') inc += l.amount;
+                    else exp += l.amount;
+                }
             });
-            
-            document.getElementById('biz-name').value = '';
-            document.getElementById('biz-cap').value = '';
-            save();
-        }
+            document.getElementById('today-inc').innerText = "₱ " + inc.toLocaleString();
+            document.getElementById('today-exp').innerText = "₱ " + exp.toLocaleString();
 
-        function addLog(bizIndex, type) {
-            const desc = prompt("Description (e.g. Load, WiFi Payment):");
-            const amt = parseFloat(prompt("Amount (PHP):")) || 0;
-            const date = prompt("Date (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
-            
-            if(!desc || !amt) return;
-
-            data.businesses[bizIndex].logs.unshift({
-                desc,
-                amt: (type === 'inc' ? amt : -amt),
-                date: date || new Date().toLocaleDateString(),
-                id: Date.now()
-            });
-            save();
-        }
-
-        function deleteLog(bizIndex, logId) {
-            if(confirm("Remove this entry?")) {
-                data.businesses[bizIndex].logs = data.businesses[bizIndex].logs.filter(l => l.id !== logId);
-                save();
-            }
-        }
-
-        function deleteBiz(index) {
-            if(confirm("Delete entire business?")) { 
-                data.businesses.splice(index, 1); 
-                save(); 
-            }
-        }
-
-        function updateMonthly(index, val) {
-            data.businesses[index].monthlyInc = parseFloat(val) || 0;
-            save();
-        }
-
-        function save() {
-            localStorage.setItem('murad_v4', JSON.stringify(data));
-            render();
-        }
-
-        function render() {
-            document.getElementById('w-cash').value = data.cash;
-            document.getElementById('w-gcash').value = data.gcash;
-            document.getElementById('total-wallets').innerText = "₱ " + (data.cash + data.gcash).toLocaleString();
-            document.getElementById('live-clock').innerText = new Date().toLocaleString();
-
-            const list = document.getElementById('business-list');
-            list.innerHTML = '';
-
-            data.businesses.forEach((biz, bIdx) => {
-                let totalProfit = biz.logs.reduce((sum, l) => sum + l.amt, 0);
-                let statusClass = totalProfit >= 0 ? 'background:var(--green)' : 'background:var(--red)';
-                let statusText = totalProfit >= 0 ? 'KUMIKITA' : 'NALULUGI';
-
-                list.innerHTML += `
-                    <div class="card">
-                        <div class="biz-header">
-                            <div>
-                                <b style="color:var(--blue); font-size:1.1em;">${biz.name}</b><br>
-                                <span class="status-tag" style="${statusClass}">${statusText}</span>
-                            </div>
-                            <button class="btn-del" onclick="deleteBiz(${bIdx})">Delete</button>
-                        </div>
-                        
-                        <div style="margin-top:12px; display:grid; grid-template-columns: 1fr 1fr; gap:5px; font-size:0.85em;">
-                            <div>Capital: <br><b>₱${biz.cap.toLocaleString()}</b></div>
-                            <div>Monthly Inc: <br><input type="number" style="padding:2px; height:25px;" value="${biz.monthlyInc}" onchange="updateMonthly(${bIdx}, this.value)"></div>
-                        </div>
-
-                        <div style="display:flex; gap:8px; margin-top:15px;">
-                            <button onclick="addLog(${bIdx}, 'inc')" style="background:var(--green); font-size:0.75em; flex:1;">+ PROFIT</button>
-                            <button onclick="addLog(${bIdx}, 'exp')" style="background:var(--red); font-size:0.75em; flex:1;">- EXPENSE</button>
-                        </div>
-
-                        <div style="margin-top:15px; border-top: 1px solid #21262d;">
-                            <small class="history-label" style="margin-top:10px;">Transaction Logs</small>
-                            ${biz.logs.map(l => `
-                                <div class="log-entry">
-                                    <span>
-                                        <b>${l.amt >= 0 ? '+' : ''}${l.amt}</b> - ${l.desc}<br>
-                                        <small style="color:gray">${l.date}</small>
-                                    </span>
-                                    <span style="color:gray; font-size:1.2em; cursor:pointer;" onclick="deleteLog(${bIdx}, ${l.id})">×</span>
-                                </div>
-                            `).join('')}
-                            <div style="text-align:right; margin-top:10px;">
-                                <span style="font-size:0.8em; color:gray;">Net Profit:</span>
-                                <b style="color:${totalProfit >= 0 ? 'var(--green)' : 'var(--red)'}; font-size:1.1em;"> ₱${totalProfit.toLocaleString()}</b>
-                            </div>
-                        </div>
+            // Render Logs
+            const logBox = document.getElementById('logs');
+            logBox.innerHTML = db.logs.map((l, i) => `
+                <div class="log-item">
+                    <div>
+                        <b>${l.desc}</b> <small style="color:var(--blue)">[${l.wallet.toUpperCase()}]</small>
+                        <span class="log-date">${l.cat} | ${l.time}</span>
                     </div>
-                `;
-            });
+                    <div style="color:${l.type === 'income' ? 'var(--green)' : 'var(--red)'}; font-weight:bold; margin-right:10px;">
+                        ${l.type === 'income' ? '+' : '-'} ₱${l.amount.toLocaleString()}
+                    </div>
+                    <button onclick="deleteItem(${i})" style="background:none; width:auto; padding:0; font-size:1.2em;">🗑️</button>
+                </div>
+            `).join('');
+
+            // Save to Storage
+            localStorage.setItem('murad_data', JSON.stringify(db));
         }
-        render();
+
+        function handleTransaction(type) {
+            const descInput = document.getElementById('desc');
+            const amtInput = document.getElementById('amt');
+            const wallet = document.getElementById('wallet').value;
+            const cat = document.getElementById('category').value;
+
+            const amount = parseFloat(amtInput.value);
+            const description = descInput.value.trim() || cat;
+
+            if(!amtInput.value || isNaN(amount) || amount <= 0) {
+                alert("Pakilagay ang tamang halaga.");
+                return;
+            }
+
+            // Update Math
+            if(type === 'income') {
+                db[wallet] += amount;
+            } else {
+                db[wallet] -= amount;
+            }
+
+            // Add Log
+            const now = new Date();
+            db.logs.unshift({
+                desc: description,
+                amount: amount,
+                wallet: wallet,
+                cat: cat,
+                type: type,
+                date: now.toLocaleDateString(),
+                time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+
+            // Reset Inputs
+            descInput.value = '';
+            amtInput.value = '';
+            
+            updateDisplay();
+        }
+
+        function deleteItem(index) {
+            const item = db.logs[index];
+            if(item.type === 'income') db[item.wallet] -= item.amount;
+            else db[item.wallet] += item.amount;
+            db.logs.splice(index, 1);
+            updateDisplay();
+        }
+
+        function clearData() {
+            if(confirm("Burahin lahat?")) {
+                db = { cash: 0, gcash: 0, logs: [] };
+                updateDisplay();
+            }
+        }
+
+        // Initial Run
+        updateDisplay();
     </script>
 </body>
 </html>
